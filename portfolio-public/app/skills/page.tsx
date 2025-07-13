@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import apiClient from "@/lib/apiClient"
 
 interface Skill {
   _id: string;
@@ -14,8 +15,7 @@ export default function SkillsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/skills")
-      .then(res => res.json())
+    apiClient.get<Skill[]>("/api/skills")
       .then(data => {
         setSkills(data)
         setLoading(false)

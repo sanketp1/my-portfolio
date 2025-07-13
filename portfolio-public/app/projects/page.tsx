@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
+import apiClient from "@/lib/apiClient"
 
 interface Project {
   _id: string;
@@ -19,8 +20,7 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/projects")
-      .then(res => res.json())
+    apiClient.get<Project[]>("/api/projects")
       .then(data => {
         setProjects(data)
         setLoading(false)

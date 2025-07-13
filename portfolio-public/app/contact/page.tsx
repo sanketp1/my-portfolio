@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import apiClient from "@/lib/apiClient"
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" })
@@ -18,17 +19,9 @@ export default function ContactPage() {
     setSuccess("")
     setError("")
     try {
-      const res = await fetch("http://localhost:5000/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
-      if (res.ok) {
-        setSuccess("Message sent successfully!")
-        setForm({ name: "", email: "", subject: "", message: "" })
-      } else {
-        setError("Failed to send message.")
-      }
+      await apiClient.post("/api/contact", form)
+      setSuccess("Message sent successfully!")
+      setForm({ name: "", email: "", subject: "", message: "" })
     } catch {
       setError("Failed to send message.")
     } finally {

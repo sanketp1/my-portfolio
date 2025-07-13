@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import apiClient from "@/lib/apiClient"
 
 interface Experience {
   _id: string;
-  company: string;
   position: string;
+  company: string;
   startDate: string;
   endDate?: string;
   description?: string;
@@ -16,8 +17,7 @@ export default function ExperiencePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/experience")
-      .then(res => res.json())
+    apiClient.get<Experience[]>("/api/experience")
       .then(data => {
         setExperience(data)
         setLoading(false)

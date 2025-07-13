@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
+import apiClient from "@/lib/apiClient"
 
 interface ShowcaseItem {
   _id: string;
@@ -17,8 +18,7 @@ export default function ShowcasePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/showcase")
-      .then(res => res.json())
+    apiClient.get<ShowcaseItem[]>("/api/showcase")
       .then(data => {
         setShowcase(data)
         setLoading(false)

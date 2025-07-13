@@ -72,11 +72,13 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
           {/* Profile Image - Mobile First */}
           <div className="flex justify-center lg:hidden mb-8">
             <Image
-              src={personalInfo?.avatar || "https://randomuser.me/api/portraits/men/32.jpg"}
+              src={personalInfo?.avatar || "/placeholder-user.jpg"}
               alt={personalInfo?.name || "Profile"}
               width={280}
               height={280}
-              className="w-70 h-70 rounded-full object-cover"
+              className="w-70 h-70 rounded-full object-cover border-4 border-gray-200 shadow"
+              onError={(e: any) => { e.currentTarget.src = "/placeholder-user.jpg"; }}
+              priority
             />
           </div>
           
@@ -87,44 +89,42 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
             <p className="text-lg text-gray-600 leading-relaxed">
               {hero?.subheadline || personalInfo?.title || "I build modern, scalable web applications."}
             </p>
+            {/* Social/contact links - always visible and prominent */}
+            <div className="flex flex-wrap items-center gap-4 mt-2 mb-4">
+              {personalInfo?.location && (
+                <span className="flex items-center text-gray-500 text-sm">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  {personalInfo.location}
+                </span>
+              )}
+              {socialLinks?.website && (
+                <a href={socialLinks.website} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:underline text-sm">
+                  <Globe className="w-4 h-4 mr-1" />
+                  Website
+                </a>
+              )}
+              {socialLinks?.github && (
+                <a href={socialLinks.github} target="_blank" rel="noopener noreferrer" className="flex items-center text-gray-800 hover:underline text-sm">
+                  <Github className="w-4 h-4 mr-1" />
+                  GitHub
+                </a>
+              )}
+              {socialLinks?.linkedin && (
+                <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-700 hover:underline text-sm">
+                  <Linkedin className="w-4 h-4 mr-1" />
+                  LinkedIn
+                </a>
+              )}
+              {socialLinks?.twitter && (
+                <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-500 hover:underline text-sm">
+                  <Twitter className="w-4 h-4 mr-1" />
+                  Twitter
+                </a>
+              )}
+            </div>
             <p className="text-base text-gray-500 leading-relaxed">
-              {personalInfo?.bio || "Welcome to my portfolio!"}
+              {about?.description || personalInfo?.bio || "Welcome to my portfolio!"}
             </p>
-            {/* Social/contact links */}
-            {(personalInfo || socialLinks) && (
-              <div className="flex flex-wrap items-center gap-4 mt-4">
-                {personalInfo?.location && (
-                  <span className="flex items-center text-gray-500 text-sm">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {personalInfo.location}
-                  </span>
-                )}
-                {socialLinks?.website && (
-                  <a href={socialLinks.website} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:underline text-sm">
-                    <Globe className="w-4 h-4 mr-1" />
-                    Website
-                  </a>
-                )}
-                {socialLinks?.github && (
-                  <a href={socialLinks.github} target="_blank" rel="noopener noreferrer" className="flex items-center text-gray-800 hover:underline text-sm">
-                    <Github className="w-4 h-4 mr-1" />
-                    GitHub
-                  </a>
-                )}
-                {socialLinks?.linkedin && (
-                  <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-700 hover:underline text-sm">
-                    <Linkedin className="w-4 h-4 mr-1" />
-                    LinkedIn
-                  </a>
-                )}
-                {socialLinks?.twitter && (
-                  <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-500 hover:underline text-sm">
-                    <Twitter className="w-4 h-4 mr-1" />
-                    Twitter
-                  </a>
-                )}
-              </div>
-            )}
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={() => scrollToSection(projectsRef)}>
                 <ChevronDown className="w-4 h-4" />
@@ -137,15 +137,48 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
           {/* Profile Image - Desktop Only */}
           <div className="hidden lg:flex justify-end">
             <Image
-              src={personalInfo?.avatar || "https://randomuser.me/api/portraits/men/32.jpg"}
+              src={personalInfo?.avatar || "/placeholder-user.jpg"}
               alt={personalInfo?.name || "Profile"}
               width={320}
               height={320}
-              className="w-80 h-80 rounded-full object-cover"
+              className="w-80 h-80 rounded-full object-cover border-4 border-gray-200 shadow"
+              onError={(e: any) => { e.currentTarget.src = "/placeholder-user.jpg"; }}
+              priority
             />
           </div>
         </div>
       </section>
+
+      {/* About Section */}
+      {(about?.description || (about?.images && about.images.length > 0) || (about?.highlights && about.highlights.length > 0)) && (
+        <section id="about" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">About Me</h2>
+          {about?.description && (
+            <p className="text-lg text-gray-700 mb-6">{about.description}</p>
+          )}
+          {about?.images && about.images.length > 0 && (
+            <div className="flex flex-wrap gap-4 mb-6">
+              {about.images.map((img: string, idx: number) => (
+                <Image
+                  key={img}
+                  src={img}
+                  alt={`About image ${idx + 1}`}
+                  width={220}
+                  height={140}
+                  className="rounded-lg object-cover shadow"
+                />
+              ))}
+            </div>
+          )}
+          {about?.highlights && about.highlights.length > 0 && (
+            <ul className="list-disc pl-6 space-y-2 text-gray-700">
+              {about.highlights.map((hl: string, idx: number) => (
+                <li key={idx}>{hl}</li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {/* Projects Section */}
       <section id="projects" ref={projectsRef} className="bg-white py-20 animate-fadeIn">

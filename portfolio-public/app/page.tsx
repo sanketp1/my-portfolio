@@ -1,9 +1,9 @@
 import HomePage from '../components/HomePage'
 import { format } from 'date-fns'
+import apiClient from "@/lib/apiClient"
 
-async function fetchAPI(endpoint) {
-  const res = await fetch(`http://localhost:5000/api/${endpoint}`, { cache: 'no-store' })
-  return res.json()
+async function fetchAPI(endpoint: string) {
+  return apiClient.get(`/api/${endpoint}`)
 }
 
 export default async function Page() {

@@ -139,66 +139,49 @@ export const updateProfile = async (req: Request, res: Response) => {
     // Process form data to build nested objects
     const processedBody: any = {};
     
-    // Process personalInfo fields
-    if (req.body['personalInfo[name]'] || req.body['personalInfo[title]'] || req.body['personalInfo[bio]'] || 
-        req.body['personalInfo[location]'] || req.body['personalInfo[email]'] || req.body['personalInfo[phone]'] ||
-        req.body['personalInfo[socialLinks][github]'] || req.body['personalInfo[socialLinks][linkedin]'] || 
-        req.body['personalInfo[socialLinks][twitter]'] || req.body['personalInfo[socialLinks][website]']) {
-      
-      processedBody.personalInfo = {
-        ...(req.body['personalInfo[name]'] && { name: req.body['personalInfo[name]'] }),
-        ...(req.body['personalInfo[title]'] && { title: req.body['personalInfo[title]'] }),
-        ...(req.body['personalInfo[bio]'] && { bio: req.body['personalInfo[bio]'] }),
-        ...(req.body['personalInfo[location]'] && { location: req.body['personalInfo[location]'] }),
-        ...(req.body['personalInfo[email]'] && { email: req.body['personalInfo[email]'] }),
-        ...(req.body['personalInfo[phone]'] && { phone: req.body['personalInfo[phone]'] }),
-      };
-
-      // Process social links
-      if (req.body['personalInfo[socialLinks][github]'] || req.body['personalInfo[socialLinks][linkedin]'] || 
-          req.body['personalInfo[socialLinks][twitter]'] || req.body['personalInfo[socialLinks][website]']) {
-        processedBody.personalInfo.socialLinks = {
-          ...(req.body['personalInfo[socialLinks][github]'] && { github: req.body['personalInfo[socialLinks][github]'] }),
-          ...(req.body['personalInfo[socialLinks][linkedin]'] && { linkedin: req.body['personalInfo[socialLinks][linkedin]'] }),
-          ...(req.body['personalInfo[socialLinks][twitter]'] && { twitter: req.body['personalInfo[socialLinks][twitter]'] }),
-          ...(req.body['personalInfo[socialLinks][website]'] && { website: req.body['personalInfo[socialLinks][website]'] }),
-        };
+    // Always set all personalInfo fields, using empty string if not present
+    processedBody.personalInfo = {
+      name: req.body['personalInfo[name]'] || '',
+      title: req.body['personalInfo[title]'] || '',
+      bio: req.body['personalInfo[bio]'] || '',
+      location: req.body['personalInfo[location]'] || '',
+      email: req.body['personalInfo[email]'] || '',
+      phone: req.body['personalInfo[phone]'] || '',
+      avatar: undefined, // will be set below if avatarUrl exists
+      socialLinks: {
+        github: req.body['personalInfo[socialLinks][github]'] || '',
+        linkedin: req.body['personalInfo[socialLinks][linkedin]'] || '',
+        twitter: req.body['personalInfo[socialLinks][twitter]'] || '',
+        website: req.body['personalInfo[socialLinks][website]'] || '',
       }
-    }
-
-    // Process hero fields
-    if (req.body['hero[headline]'] || req.body['hero[subheadline]'] || req.body['hero[backgroundImage]'] || 
-        req.body['hero[ctaText]'] || req.body['hero[ctaLink]']) {
-      processedBody.hero = {
-        ...(req.body['hero[headline]'] && { headline: req.body['hero[headline]'] }),
-        ...(req.body['hero[subheadline]'] && { subheadline: req.body['hero[subheadline]'] }),
-        ...(req.body['hero[backgroundImage]'] && { backgroundImage: req.body['hero[backgroundImage]'] }),
-        ...(req.body['hero[ctaText]'] && { ctaText: req.body['hero[ctaText]'] }),
-        ...(req.body['hero[ctaLink]'] && { ctaLink: req.body['hero[ctaLink]'] }),
-      };
-    }
-
-    // Process about fields
-    if (req.body['about[description]'] || req.body['about[images]'] || req.body['about[highlights]']) {
-      processedBody.about = {
-        ...(req.body['about[description]'] && { description: req.body['about[description]'] }),
-        ...(req.body['about[images]'] && { images: req.body['about[images]'].split(',').map((img: string) => img.trim()) }),
-        ...(req.body['about[highlights]'] && { highlights: req.body['about[highlights]'].split(',').map((highlight: string) => highlight.trim()) }),
-      };
-    }
-
-    // Process boolean field
-    if (req.body.isActive !== undefined) {
-      processedBody.isActive = req.body.isActive === 'true' ? true : req.body.isActive === 'false' ? false : undefined;
-    }
+    };
 
     // If avatar was uploaded, add it to personalInfo
     if (avatarUrl) {
-      if (!processedBody.personalInfo) {
-        processedBody.personalInfo = {};
-      }
       processedBody.personalInfo.avatar = avatarUrl;
+    } else {
+      // If not uploading new avatar, keep previous value by not setting avatar
+      delete processedBody.personalInfo.avatar;
     }
+
+    // Always set all hero fields
+    processedBody.hero = {
+      headline: req.body['hero[headline]'] || '',
+      subheadline: req.body['hero[subheadline]'] || '',
+      backgroundImage: req.body['hero[backgroundImage]'] || '',
+      ctaText: req.body['hero[ctaText]'] || '',
+      ctaLink: req.body['hero[ctaLink]'] || '',
+    };
+
+    // Always set all about fields
+    processedBody.about = {
+      description: req.body['about[description]'] || '',
+      images: req.body['about[images]'] ? req.body['about[images]'].split(',').map((img: string) => img.trim()) : [],
+      highlights: req.body['about[highlights]'] ? req.body['about[highlights]'].split(',').map((highlight: string) => highlight.trim()) : [],
+    };
+
+    // Always set isActive (default to true if not provided)
+    processedBody.isActive = req.body.isActive === 'false' ? false : true;
 
     const profile = await Profile.findOneAndUpdate({}, processedBody, {
       new: true,
