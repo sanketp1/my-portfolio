@@ -5,6 +5,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+seed.ts
+
 # Build outputs
 dist/
 build/
@@ -103,3 +105,4 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/ 
+.vercel
