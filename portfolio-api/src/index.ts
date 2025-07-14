@@ -1,6 +1,8 @@
 import { config } from 'dotenv';
 import path from 'path';
 
+
+
 // Load environment variables from .env file
 config({ path: path.resolve(process.cwd(), '.env') });
 
@@ -19,7 +21,8 @@ import { apiLimiter } from './middleware/rateLimiter';
 import { requestLogger } from './middleware/logger';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import {seed} from './seed';
+// import {seed} from './seed';
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;

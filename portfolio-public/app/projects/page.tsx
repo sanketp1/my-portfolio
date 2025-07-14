@@ -4,15 +4,88 @@ import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import apiClient from "@/lib/apiClient"
+import Link from "next/link"
 
 interface Project {
   _id: string;
   title: string;
+  description: string;
   shortDescription: string;
+  images: string[];
   technologies: string[];
-  images?: string[];
+  features: string[];
   githubUrl?: string;
   liveUrl?: string;
+  thumbnailUrl: string;
+  category: string;
+  status: string;
+  isFeatured: boolean;
+  order: number;
+  views: number;
+  createdAt: string;
+}
+
+function ProjectCard({ project }: { project: Project }) {
+  return (
+    <Link href={`/projects/${project._id}`} className="group bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100">
+      <div className="relative w-full aspect-[16/9] bg-gray-100">
+        <Image
+          src={project.thumbnailUrl || project.images[0] || "/placeholder.jpg"}
+          alt={project.title}
+          fill
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        {project.isFeatured && (
+          <span className="absolute top-2 left-2 bg-yellow-400 text-xs font-bold px-2 py-1 rounded shadow">Featured</span>
+        )}
+        <span className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">{project.status}</span>
+      </div>
+      <div className="flex-1 flex flex-col p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <h2 className="text-xl font-bold text-purple-700 line-clamp-2 flex-1">{project.title}</h2>
+          <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded capitalize">{project.category}</span>
+        </div>
+        <p className="text-gray-600 mb-3 line-clamp-3">{project.shortDescription}</p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {project.technologies?.map((tech) => (
+            <span key={tech} className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">{tech}</span>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="text-xs text-gray-500">Views: {project.views}</span>
+          <span className="text-xs text-gray-500">Created: {new Date(project.createdAt).toLocaleDateString()}</span>
+        </div>
+        <details>
+          <summary className="cursor-pointer text-sm text-blue-600 hover:underline">Full Description & Features</summary>
+          <div className="mt-2">
+            <p className="text-gray-700 mb-2 whitespace-pre-line">{project.description}</p>
+            {project.features && project.features.length > 0 && (
+              <ul className="list-disc pl-5 text-gray-700 text-sm space-y-1 mb-2">
+                {project.features.map((feature, idx) => (
+                  <li key={idx}>{feature}</li>
+                ))}
+              </ul>
+            )}
+            {project.images && project.images.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {project.images.map((img, idx) => (
+                  <Image key={idx} src={img} alt={`Screenshot ${idx + 1}`} width={80} height={60} className="rounded border object-cover" />
+                ))}
+              </div>
+            )}
+          </div>
+        </details>
+        <div className="flex gap-2 mt-auto">
+          {project.githubUrl && (
+            <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-gray-900 text-white rounded hover:bg-gray-700 text-xs font-medium transition">GitHub</a>
+          )}
+          {project.liveUrl && (
+            <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium transition">Live</a>
+          )}
+        </div>
+      </div>
+    </Link>
+  )
 }
 
 export default function ProjectsPage() {
@@ -42,36 +115,8 @@ export default function ProjectsPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 32 }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
-              className="group bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
             >
-              {project.images && project.images[0] && (
-                <div className="relative w-full aspect-[16/9] bg-gray-100">
-                  <Image
-                    src={project.images[0]}
-                    alt={project.title}
-                    fill
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-              )}
-              <div className="flex-1 flex flex-col p-6">
-                <h2 className="text-xl font-bold mb-2 text-purple-700 line-clamp-2">{project.title}</h2>
-                <p className="text-gray-600 mb-3 line-clamp-3">{project.shortDescription}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.technologies?.map((tech) => (
-                    <span key={tech} className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">{tech}</span>
-                  ))}
-                </div>
-                {/* Add GitHub/Live Preview if available */}
-                <div className="flex gap-2 mt-auto">
-                  {project.githubUrl && (
-                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-gray-900 text-white rounded hover:bg-gray-700 text-xs font-medium transition">GitHub</a>
-                  )}
-                  {project.liveUrl && (
-                    <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-xs font-medium transition">Live Preview</a>
-                  )}
-                </div>
-              </div>
+              <ProjectCard project={project} />
             </motion.div>
           ))}
         </AnimatePresence>

@@ -1,7 +1,7 @@
 import { log } from "console";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.NEXT_PUBLIC_API_PORT || 5000}`;
-console.log(API_BASE_URL);
+// console.log(API_BASE_URL);
 
 export class ApiClient {
   baseUrl: string;
