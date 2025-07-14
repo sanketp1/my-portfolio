@@ -1,4 +1,7 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import apiClient from "@/lib/apiClient";
 
@@ -21,24 +24,36 @@ interface Project {
   features?: string[];
 }
 
-async function getProject(id: string): Promise<Project | null> {
-  try {
-    // console.log(apiClient.baseUrl+`/api/projects/${id}`);
-    // console.log(id);
-    const res = await apiClient.get(`/api/projects/${id}`);
-    // console.log(res);
-    return res as Project | null;
-  } catch {
-    return null;
-  }
-}
+export default function ProjectDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
-  const project = await getProject(params.id);
-  if (!project) return notFound();
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    apiClient.get(`/api/projects/${id}`)
+      .then((res) => setProject(res as Project))
+      .catch(() => setError("Project not found or failed to load."))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <div className="max-w-3xl mx-auto py-10 px-4 text-center text-lg">Loading project...</div>;
+  if (error || !project) return <div className="max-w-3xl mx-auto py-10 px-4 text-center text-red-600 text-lg">{error || "Project not found."}</div>;
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
+      {/* Back Button */}
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-2 text-purple-700 hover:text-purple-900 text-sm font-medium mb-6 px-2 py-1 rounded hover:bg-purple-50 transition"
+      >
+        {/* You can use an icon here if you want */}
+        &larr; Back
+      </button>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-purple-700 mb-2">{project.title}</h1>
         <div className="flex flex-wrap gap-2 items-center mb-2">
