@@ -9,7 +9,7 @@ export class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  async request<T>(method: string, url: string, data?: any, options?: RequestInit): Promise<T> {
+  async request<T>(method: string, url: string, data?: any, options?: RequestInit, retry = true): Promise<T> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...(options?.headers || {}),
@@ -25,6 +25,14 @@ export class ApiClient {
     const response = await fetch(`${this.baseUrl}${url}`, fetchOptions);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      // Retry once if DB not connected or 500 error
+      if (
+        retry &&
+        (errorData.message?.includes('Database not connected') || response.status === 500)
+      ) {
+        await new Promise((res) => setTimeout(res, 500)); // wait 0.5s
+        return this.request<T>(method, url, data, options, false);
+      }
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
     return response.json();

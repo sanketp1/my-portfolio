@@ -1,10 +1,12 @@
 "use client"
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 
 export default function ShowcaseDetailPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   let showcase = null;
   const showcaseParam = searchParams.get("showcase");
   if (showcaseParam) {
@@ -23,6 +25,13 @@ export default function ShowcaseDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
+      {/* Back Button */}
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-2 text-orange-700 hover:text-orange-900 text-sm font-medium mb-6 px-2 py-1 rounded hover:bg-orange-50 transition"
+      >
+        <ArrowLeft className="w-5 h-5" /> Back
+      </button>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-orange-900 mb-2 flex items-center gap-2">{showcase.title}</h1>
         <div className="flex flex-wrap gap-2 items-center mb-2">

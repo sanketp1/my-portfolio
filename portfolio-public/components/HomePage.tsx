@@ -9,6 +9,7 @@ import { ContactForm } from "@/components/contact-form"
 import { Footer } from "@/components/footer"
 import { useRef, useState, useEffect } from "react"
 import { format } from 'date-fns'
+import apiClient from "@/lib/apiClient"
 
 export function BlogCard({ blog }: { blog: any }) {
   const cardContent = (
@@ -115,7 +116,7 @@ export function BlogCard({ blog }: { blog: any }) {
   );
 }
 
-export default function HomePage({ profile, projects, blogs, skills, experience, showcase }: any) {
+export default function HomePage() {
   // Section refs for scrolling
   const projectsRef = useRef<HTMLDivElement | null>(null)
   const blogsRef = useRef<HTMLDivElement | null>(null)
@@ -128,6 +129,42 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
   const [showAllMobileSkills, setShowAllMobileSkills] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // New: State for all data
+  const [profile, setProfile] = useState<any>(null);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [blogs, setBlogs] = useState<any[]>([]);
+  const [skills, setSkills] = useState<any[]>([]);
+  const [experience, setExperience] = useState<any[]>([]);
+  const [showcase, setShowcase] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      apiClient.get('/api/profile'),
+      apiClient.get('/api/projects'),
+      apiClient.get('/api/blogs'),
+      apiClient.get('/api/skills'),
+      apiClient.get('/api/experience'),
+      apiClient.get('/api/showcase'),
+    ])
+      .then(([profile, projects, blogs, skills, experience, showcase]) => {
+        setProfile(profile);
+        setProjects(projects as any[]);
+        setBlogs(blogs as any[]);
+        setSkills(skills as any[]);
+        setExperience(experience as any[]);
+        setShowcase(showcase as any[]);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to load data.');
+        setLoading(false);
+      });
+  }, []);
+
   useEffect(() => {
     function handleResize() {
       setIsMobile(window.innerWidth < 640);
@@ -136,6 +173,13 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-xl">Loading portfolio...</div>;
+  }
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center text-red-600 text-xl">{error}</div>;
+  }
 
   // Extract data from new profile structure
   const personalInfo = profile?.personalInfo || {}
@@ -214,7 +258,7 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
   }
 
   // Debug: List all unique skill categories
-  const allSkillCategories: string[] = Array.from(new Set(skills?.map((s: any) => s.category))).sort();
+  const allSkillCategories: string[] = Array.from(new Set((skills as any[]).map((s: any) => s.category))).sort();
 
   // Filtered skills for display
   const filteredSkills = activeSkillCategory === 'All'
@@ -454,8 +498,8 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
           {/* Skills Grid */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
             {visibleSkills.map((skill: any, idx: number) => (
-              <div
-                key={skill._id}
+                <div
+                  key={skill._id}
                 className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col sm:flex-row md:flex-col items-start p-4 sm:p-3 md:p-4 hover:shadow-lg hover:border-purple-300 hover:scale-[1.03] transition-all duration-200 group w-full max-w-full mx-auto min-h-[110px]"
                 style={{ animationDelay: `${idx * 40}ms` }}
               >
@@ -465,15 +509,15 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
                     <div className="flex flex-col sm:flex-row md:flex-col items-center sm:items-start md:items-center gap-1 sm:gap-2 md:gap-1">
                       <span className="text-base sm:text-sm md:text-base font-semibold text-gray-900 truncate">{skill.name}</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                        skill.level === 'beginner' ? 'bg-gray-200 text-gray-700' :
-                        skill.level === 'intermediate' ? 'bg-blue-100 text-blue-700' :
-                        skill.level === 'advanced' ? 'bg-green-100 text-green-700' :
-                        skill.level === 'expert' ? 'bg-yellow-100 text-yellow-700' : ''
-                      }`}>
-                        {skill.level.charAt(0).toUpperCase() + skill.level.slice(1)}
-                      </span>
+                    skill.level === 'beginner' ? 'bg-gray-200 text-gray-700' :
+                    skill.level === 'intermediate' ? 'bg-blue-100 text-blue-700' :
+                    skill.level === 'advanced' ? 'bg-green-100 text-green-700' :
+                    skill.level === 'expert' ? 'bg-yellow-100 text-yellow-700' : ''
+                  }`}>
+                    {skill.level.charAt(0).toUpperCase() + skill.level.slice(1)}
+                  </span>
                     </div>
-                    {typeof skill.yearsOfExperience === 'number' && (
+                  {typeof skill.yearsOfExperience === 'number' && (
                       <span className="text-[10px] text-gray-400">{skill.yearsOfExperience} yrs</span>
                     )}
                   </div>
@@ -481,8 +525,8 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
                 {skill.description && (
                   <p className="text-xs sm:text-[11px] md:text-xs text-gray-600 mt-1 line-clamp-2 w-full text-center sm:text-left md:text-center">{skill.description}</p>
                 )}
-              </div>
-            ))}
+                </div>
+              ))}
           </div>
           {/* Explore More button for mobile */}
           {isMobile && !showAllMobileSkills && filteredSkills.length > 5 && (
@@ -538,8 +582,8 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
                             <span>{new Date(exp.startDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short' })} - {exp.isCurrentJob ? 'Present' : exp.endDate ? new Date(exp.endDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) : ''}</span>
                             {exp.isCurrentJob && <span className="bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-medium ml-2">Current</span>}
                           </div>
-                        </div>
-                      </div>
+                  </div>
+                </div>
                       <p className="text-gray-700 mb-3 text-sm whitespace-pre-line">{exp.description}</p>
                       {exp.responsibilities && exp.responsibilities.length > 0 && (
                         <div className="mb-2">
@@ -621,8 +665,8 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
                         >
                           View Details
                         </Link>
-                      </div>
-                    </div>
+                </div>
+              </div>
                   </div>
                 );
               })}
@@ -663,7 +707,7 @@ export default function HomePage({ profile, projects, blogs, skills, experience,
           </div>
           <div className="bg-white rounded-2xl shadow-lg border border-purple-100 p-8 sm:p-10 flex flex-col items-center">
             <h2 className="text-xl font-semibold text-purple-700 mb-4">Send a Message</h2>
-            <ContactForm />
+          <ContactForm />
           </div>
         </div>
       </section>
