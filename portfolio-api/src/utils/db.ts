@@ -2,10 +2,16 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.DATABASE_URL || 'mongodb://localhost:27017/portfolio';
 
+// Debug logging
+// console.log('🔍 Environment check:');
+// console.log('DATABASE_URL from env:', process.env.DATABASE_URL ? 'SET' : 'NOT SET');
+// console.log('MONGODB_URI being used:', MONGODB_URI);
+
 export const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) return;
   
   try {
+    console.log('🔄 Attempting to connect to MongoDB...');
     await mongoose.connect(MONGODB_URI, {
       // Add connection options to handle authentication
       maxPoolSize: 10,

@@ -124,6 +124,15 @@ export const getProfile = async (req: Request, res: Response) => {
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
+    // Debug: Log the incoming request body
+    // console.log('Received body:', req.body);
+    // console.log('Request body keys:', Object.keys(req.body));
+    // console.log('Content-Type:', req.headers['content-type']);
+    
+    // Check if it's FormData (bracket notation) or JSON (nested objects)
+    const isFormData = req.headers['content-type']?.includes('multipart/form-data');
+    // console.log('Is FormData:', isFormData);
+    
     // Handle multipart form data for avatar upload
     let avatarUrl: string | undefined;
     
@@ -136,52 +145,126 @@ export const updateProfile = async (req: Request, res: Response) => {
       avatarUrl = result.secure_url;
     }
 
-    // Process form data to build nested objects
+    // Process the request body - handle both bracket notation and nested objects
     const processedBody: any = {};
     
-    // Always set all personalInfo fields, using empty string if not present
-    processedBody.personalInfo = {
-      name: req.body['personalInfo[name]'] || '',
-      title: req.body['personalInfo[title]'] || '',
-      bio: req.body['personalInfo[bio]'] || '',
-      location: req.body['personalInfo[location]'] || '',
-      email: req.body['personalInfo[email]'] || '',
-      phone: req.body['personalInfo[phone]'] || '',
-      avatar: undefined, // will be set below if avatarUrl exists
-      socialLinks: {
-        github: req.body['personalInfo[socialLinks][github]'] || '',
-        linkedin: req.body['personalInfo[socialLinks][linkedin]'] || '',
-        twitter: req.body['personalInfo[socialLinks][twitter]'] || '',
-        website: req.body['personalInfo[socialLinks][website]'] || '',
+    // Helper function to get value from either format
+    const getValue = (bracketKey: string, nestedPath: string) => {
+      // First check bracket notation
+      if (req.body[bracketKey]) {
+        console.log(`Found bracket notation: ${bracketKey} =`, req.body[bracketKey]);
+        return req.body[bracketKey];
       }
+      
+      // Then check nested object format
+      const pathParts = nestedPath.split('.');
+      let value = req.body;
+      for (const part of pathParts) {
+        if (value && typeof value === 'object' && part in value) {
+          value = value[part];
+        } else {
+          return undefined;
+        }
+      }
+      if (value) {
+        console.log(`Found nested object: ${nestedPath} =`, value);
+      }
+      return value;
     };
+    
+    // Handle personalInfo - check both formats
+    const hasPersonalInfo = req.body.personalInfo || 
+      req.body['personalInfo[name]'] || 
+      req.body['personalInfo[title]'] || 
+      req.body['personalInfo[bio]'] || 
+      req.body['personalInfo[location]'] || 
+      req.body['personalInfo[email]'] || 
+      req.body['personalInfo[phone]'] ||
+      req.body['personalInfo[socialLinks][github]'] ||
+      req.body['personalInfo[socialLinks][linkedin]'] ||
+      req.body['personalInfo[socialLinks][twitter]'] ||
+      req.body['personalInfo[socialLinks][website]'];
+    
+    console.log('Has personalInfo:', hasPersonalInfo);
+    
+    if (hasPersonalInfo) {
+      processedBody.personalInfo = {
+        ...(getValue('personalInfo[name]', 'personalInfo.name') && { name: getValue('personalInfo[name]', 'personalInfo.name') }),
+        ...(getValue('personalInfo[title]', 'personalInfo.title') && { title: getValue('personalInfo[title]', 'personalInfo.title') }),
+        ...(getValue('personalInfo[bio]', 'personalInfo.bio') && { bio: getValue('personalInfo[bio]', 'personalInfo.bio') }),
+        ...(getValue('personalInfo[location]', 'personalInfo.location') && { location: getValue('personalInfo[location]', 'personalInfo.location') }),
+        ...(getValue('personalInfo[email]', 'personalInfo.email') && { email: getValue('personalInfo[email]', 'personalInfo.email') }),
+        ...(getValue('personalInfo[phone]', 'personalInfo.phone') && { phone: getValue('personalInfo[phone]', 'personalInfo.phone') }),
+      };
+      
+      // Handle social links - check both formats
+      const hasSocialLinks = req.body.personalInfo?.socialLinks || 
+        req.body['personalInfo[socialLinks][github]'] ||
+        req.body['personalInfo[socialLinks][linkedin]'] ||
+        req.body['personalInfo[socialLinks][twitter]'] ||
+        req.body['personalInfo[socialLinks][website]'];
+      
+      if (hasSocialLinks) {
+        processedBody.personalInfo.socialLinks = {
+          ...(getValue('personalInfo[socialLinks][github]', 'personalInfo.socialLinks.github') && { github: getValue('personalInfo[socialLinks][github]', 'personalInfo.socialLinks.github') }),
+          ...(getValue('personalInfo[socialLinks][linkedin]', 'personalInfo.socialLinks.linkedin') && { linkedin: getValue('personalInfo[socialLinks][linkedin]', 'personalInfo.socialLinks.linkedin') }),
+          ...(getValue('personalInfo[socialLinks][twitter]', 'personalInfo.socialLinks.twitter') && { twitter: getValue('personalInfo[socialLinks][twitter]', 'personalInfo.socialLinks.twitter') }),
+          ...(getValue('personalInfo[socialLinks][website]', 'personalInfo.socialLinks.website') && { website: getValue('personalInfo[socialLinks][website]', 'personalInfo.socialLinks.website') }),
+        };
+      }
+    }
+
+    // Handle hero - check both formats
+    const hasHero = req.body.hero || 
+      req.body['hero[headline]'] || 
+      req.body['hero[subheadline]'] || 
+      req.body['hero[backgroundImage]'] || 
+      req.body['hero[ctaText]'] || 
+      req.body['hero[ctaLink]'];
+    
+    console.log('Has hero:', hasHero);
+    
+    if (hasHero) {
+      processedBody.hero = {
+        ...(getValue('hero[headline]', 'hero.headline') && { headline: getValue('hero[headline]', 'hero.headline') }),
+        ...(getValue('hero[subheadline]', 'hero.subheadline') && { subheadline: getValue('hero[subheadline]', 'hero.subheadline') }),
+        ...(getValue('hero[backgroundImage]', 'hero.backgroundImage') && { backgroundImage: getValue('hero[backgroundImage]', 'hero.backgroundImage') }),
+        ...(getValue('hero[ctaText]', 'hero.ctaText') && { ctaText: getValue('hero[ctaText]', 'hero.ctaText') }),
+        ...(getValue('hero[ctaLink]', 'hero.ctaLink') && { ctaLink: getValue('hero[ctaLink]', 'hero.ctaLink') }),
+      };
+    }
+
+    // Handle about - check both formats
+    const hasAbout = req.body.about || 
+      req.body['about[description]'] || 
+      req.body['about[images]'] || 
+      req.body['about[highlights]'];
+    
+    console.log('Has about:', hasAbout);
+    
+    if (hasAbout) {
+      processedBody.about = {
+        ...(getValue('about[description]', 'about.description') && { description: getValue('about[description]', 'about.description') }),
+        ...(getValue('about[images]', 'about.images') && { images: getValue('about[images]', 'about.images').split(',').map((img: string) => img.trim()) }),
+        ...(getValue('about[highlights]', 'about.highlights') && { highlights: getValue('about[highlights]', 'about.highlights').split(',').map((highlight: string) => highlight.trim()) }),
+      };
+    }
+
+    // Handle boolean field
+    if (req.body.isActive !== undefined) {
+      processedBody.isActive = req.body.isActive === 'true' ? true : req.body.isActive === 'false' ? false : req.body.isActive;
+    }
 
     // If avatar was uploaded, add it to personalInfo
     if (avatarUrl) {
+      if (!processedBody.personalInfo) {
+        processedBody.personalInfo = {};
+      }
       processedBody.personalInfo.avatar = avatarUrl;
-    } else {
-      // If not uploading new avatar, keep previous value by not setting avatar
-      delete processedBody.personalInfo.avatar;
     }
 
-    // Always set all hero fields
-    processedBody.hero = {
-      headline: req.body['hero[headline]'] || '',
-      subheadline: req.body['hero[subheadline]'] || '',
-      backgroundImage: req.body['hero[backgroundImage]'] || '',
-      ctaText: req.body['hero[ctaText]'] || '',
-      ctaLink: req.body['hero[ctaLink]'] || '',
-    };
-
-    // Always set all about fields
-    processedBody.about = {
-      description: req.body['about[description]'] || '',
-      images: req.body['about[images]'] ? req.body['about[images]'].split(',').map((img: string) => img.trim()) : [],
-      highlights: req.body['about[highlights]'] ? req.body['about[highlights]'].split(',').map((highlight: string) => highlight.trim()) : [],
-    };
-
-    // Always set isActive (default to true if not provided)
-    processedBody.isActive = req.body.isActive === 'false' ? false : true;
+    // Debug: Log the processed update object
+    console.log('Processed body for update:', processedBody);
 
     const profile = await Profile.findOneAndUpdate({}, processedBody, {
       new: true,

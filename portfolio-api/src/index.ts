@@ -1,4 +1,15 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+import path from 'path';
+
+// Load environment variables from .env file
+config({ path: path.resolve(process.cwd(), '.env') });
+
+// Debug: Check if environment variables are loaded
+console.log('🔍 Main index.ts - Environment check:');
+console.log('DATABASE_URL loaded:', process.env.DATABASE_URL ? 'YES' : 'NO');
+console.log('Current working directory:', process.cwd());
+console.log('Env file path:', path.resolve(process.cwd(), '.env'));
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
